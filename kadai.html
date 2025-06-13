@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>課題管理</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+    body {
+      background: #f5f7fa;
+      font-family: 'Montserrat', Arial, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 40px 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 30px 40px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    h1 {
+      font-weight: 600;
+      font-size: 2rem;
+      margin-bottom: 30px;
+      text-align: center;
+      color: #2c3e50;
+    }
+    .add-task-form {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .add-task-form input[type="text"],
+    .add-task-form input[type="date"] {
+      flex: 1 1 150px;
+      padding: 12px 15px;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      transition: border-color 0.3s ease;
+    }
+    .add-task-form input:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+    .add-task-form button {
+      background-color: #3498db;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 12px 25px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      flex-shrink: 0;
+    }
+    .add-task-form button:hover {
+      background-color: #2980b9;
+    }
+    .subject-group {
+      margin-bottom: 25px;
+      background: #ecf0f1;
+      padding: 20px 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .subject {
+      font-weight: 600;
+      font-size: 1.4rem;
+      margin-bottom: 18px;
+      color: #34495e;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 6px;
+    }
+    .task-wrapper {
+      margin-bottom: 10px;
+    }
+    .task {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      background: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+      transition: background-color 0.3s ease;
+    }
+    .task:hover {
+      background-color: #f0f8ff;
+    }
+    .task input[type="checkbox"] {
+      margin-right: 14px;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .task label {
+      flex-grow: 1;
+      cursor: pointer;
+      user-select: none;
+    }
+    .task button {
+      margin-left: 15px;
+      cursor: pointer;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+    .task button:hover {
+      background-color: #c0392b;
+    }
+    .due {
+      font-size: 1.1rem;
+      color: #7f8c8d;
+      margin-left: 32px;
+      margin-top: -8px;
+      margin-bottom: 12px;
+      font-style: italic;
+    }
+    .task input[type="checkbox"]:checked + label {
+      text-decoration: line-through;
+      color: #95a5a6;
+    }
+    @media (max-width: 600px) {
+      .add-task-form {
+        flex-direction: column;
+      }
+      .add-task-form input,
+      .add-task-form button {
+        width: 100%;
+        margin: 8px 0;
+      }
+    }
+
+    /* --- モーダルのスタイル --- */
+    #task-detail-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    #task-detail-modal .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 100%;
+      padding: 25px 30px;
+      box-sizing: border-box;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    #task-detail-modal h2 {
+      margin: 0 0 12px;
+      color: #2c3e50;
+      font-weight: 600;
+      font-size: 1.6rem;
+    }
+    #task-detail-modal label {
+      font-weight: 600;
+      color: #34495e;
+      font-size: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    #task-detail-modal input[type="text"],
+    #task-detail-modal input[type="date"],
+    #task-detail-modal textarea {
+      padding: 8px 12px;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      transition: border-color 0.3s ease;
+      font-family: 'Montserrat', Arial, sans-serif;
+      box-sizing: border-box;
+    }
+    #task-detail-modal input[type="text"]:focus,
+    #task-detail-modal input[type="date"]:focus,
+    #task-detail-modal textarea:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+    #task-detail-modal textarea {
+      resize: vertical;
+      min-height: 100px;
+      max-height: 300px;
+    }
+    #task-detail-modal .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    #task-detail-modal button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #task-detail-modal .save-btn {
+      background-color: #3498db;
+      color: white;
+    }
+    #task-detail-modal .save-btn:hover {
+      background-color: #2980b9;
+    }
+    #task-detail-modal .cancel-btn {
+      background-color: #bdc3c7;
+      color: #2c3e50;
+    }
+    #task-detail-modal .cancel-btn:hover {
+      background-color: #95a5a6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>課題管理</h1>
+    <form class="add-task-form">
+      <input id="new-task-subject" type="text" placeholder="科目名" required />
+      <input id="new-task-title" type="text" placeholder="課題名" required />
+      <input id="new-task-date" type="date" required />
+      <button type="submit">追加</button>
+    </form>
+  </div>
+
+  <!-- モーダル -->
+  <div id="task-detail-modal">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">課題編集</h2>
+      <label>
+        科目名:
+        <input type="text" id="edit-subject" />
+      </label>
+      <label>
+        課題名:
+        <input type="text" id="edit-title" />
+      </label>
+      <label>
+        期限:
+        <input type="date" id="edit-date" />
+      </label>
+      <label>
+        課題の詳細:
+        <textarea id="edit-detail" placeholder="ここに詳細を入力してください..."></textarea>
+      </label>
+      <div class="modal-buttons">
+        <button class="cancel-btn" id="cancel-btn">キャンセル</button>
+        <button class="save-btn" id="save-btn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let editingTaskWrapper = null;
+
+    // モーダル要素
+    const modal = document.getElementById('task-detail-modal');
+    const editSubject = document.getElementById('edit-subject');
+    const editTitle = document.getElementById('edit-title');
+    const editDate = document.getElementById('edit-date');
+    const editDetail = document.getElementById('edit-detail');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const saveBtn = document.getElementById('save-btn');
+
+    // モーダル開く処理
+    function openEditModal(taskWrapper) {
+      editingTaskWrapper = taskWrapper;
+      const taskDiv = taskWrapper.querySelector('.task');
+      const label = taskDiv.querySelector('label');
+      const dueDiv = taskWrapper.querySelector('.due');
+      const detailText = taskWrapper.getAttribute('data-detail') || '';
+
+      editTitle.value = label.textContent;
+      editSubject.value = taskWrapper.parentElement.getAttribute('data-subject');
+      editDate.value = dueDiv.getAttribute('data-date');
+      editDetail.value = detailText;
+
+      modal.style.display = 'flex';
+    }
+
+    // モーダル閉じる処理
+    function closeModal() {
+      modal.style.display = 'none';
+      editingTaskWrapper = null;
+      // 入力クリアしないでOK。編集内容保持。
+    }
+
+    // 保存処理
+    function saveEdit() {
+      if (!editingTaskWrapper) return;
+
+      const newTitle = editTitle.value.trim();
+      const newSubject = editSubject.value.trim();
+      const newDate = editDate.value;
+      const newDetail = editDetail.value.trim();
+
+      if (!newTitle || !newSubject || !newDate) {
+        alert('すべての項目を入力してください。');
+        return;
+      }
+
+      const oldGroup = editingTaskWrapper.parentElement;
+      const oldSubject = oldGroup.getAttribute('data-subject');
+
+      // 更新
+      const taskDiv = editingTaskWrapper.querySelector('.task');
+      const label = taskDiv.querySelector('label');
+      const dueDiv = editingTaskWrapper.querySelector('.due');
+
+      label.textContent = newTitle;
+      dueDiv.textContent = `期限: ${newDate}`;
+      dueDiv.setAttribute('data-date', newDate);
+
+      // 詳細はカスタム属性に保存
+      editingTaskWrapper.setAttribute('data-detail', newDetail);
+
+      // 科目変更時のグループ移動
+      if (newSubject !== oldSubject) {
+        let newGroup = document.querySelector(`.subject-group[data-subject="${newSubject}"]`);
+        if (!newGroup) {
+          newGroup = document.createElement('div');
+          newGroup.className = 'subject-group';
+          newGroup.setAttribute('data-subject', newSubject);
+          const subjectHeader = document.createElement('div');
+          subjectHeader.className = 'subject';
+          subjectHeader.textContent = newSubject;
+          newGroup.appendChild(subjectHeader);
+          const container = document.querySelector('.container');
+          const form = document.querySelector('.add-task-form');
+          container.insertBefore(newGroup, form);
+        }
+        newGroup.appendChild(editingTaskWrapper);
+
+        if (oldGroup.querySelectorAll('.task-wrapper').length === 0) {
+          oldGroup.remove();
+        }
+      }
+
+      saveTasksToLocalStorage();
+      closeModal();
+    }
+
+    // モーダル外クリックで閉じる
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // キャンセルボタン
+    cancelBtn.addEventListener('click', closeModal);
+
+    // 保存ボタン
+    saveBtn.addEventListener('click', saveEdit);
+
+    // タスク保存（ローカルストレージに詳細も含めて保存）
+    function saveTasksToLocalStorage() {
+      const taskData = [];
+      document.querySelectorAll('.subject-group').forEach(group => {
+        const subject = group.getAttribute('data-subject');
+        const tasks = [];
+        group.querySelectorAll('.task-wrapper').forEach(wrapper => {
+          const taskDiv = wrapper.querySelector('.task');
+          const checkbox = taskDiv.querySelector('input[type="checkbox"]');
+          const label = taskDiv.querySelector('label');
+          const dueDiv = wrapper.querySelector('.due');
+          const detail = wrapper.getAttribute('data-detail') || '';
+          tasks.push({
+            title: label.textContent,
+            due: dueDiv.getAttribute('data-date'),
+            done: checkbox.checked,
+            detail: detail
+          });
+        });
+        taskData.push({ subject, tasks });
+      });
+      localStorage.setItem('taskList', JSON.stringify(taskData));
+    }
+
+    // ローカルストレージからタスク読み込み
+    function loadTasksFromLocalStorage() {
+      const saved = localStorage.getItem('taskList');
+      if (!saved) return;
+      const taskList = JSON.parse(saved);
+      taskList.forEach(group => {
+        const { subject, tasks } = group;
+        tasks.forEach(task => {
+          createTask(subject, task.title, task.due, task.done, task.detail);
+        });
+      });
+    }
+
+    // タスク作成関数
+    function createTask(subjectText, title, date, done = false, detail = '') {
+      const container = document.querySelector('.container');
+      const form = document.querySelector('.add-task-form');
+
+      let group = document.querySelector(`.subject-group[data-subject="${subjectText}"]`);
+      if (!group) {
+        group = document.createElement('div');
+        group.className = 'subject-group';
+        group.setAttribute('data-subject', subjectText);
+
+        const subjectHeader = document.createElement('div');
+        subjectHeader.className = 'subject';
+        subjectHeader.textContent = subjectText;
+
+        group.appendChild(subjectHeader);
+        container.insertBefore(group, form);
+      }
+
+      const taskWrapper = document.createElement('div');
+      taskWrapper.className = 'task-wrapper';
+      taskWrapper.setAttribute('data-detail', detail);
+
+      const task = document.createElement('div');
+      task.className = 'task';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = done;
+
+      const label = document.createElement('label');
+      label.textContent = title;
+      label.style.userSelect = 'none';
+      label.style.cursor = 'pointer';
+      label.addEventListener('click', () => openEditModal(taskWrapper));
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '削除';
+      deleteBtn.addEventListener('click', () => {
+        taskWrapper.remove();
+        if (group.querySelectorAll('.task-wrapper').length === 0) {
+          group.remove();
+        }
+        saveTasksToLocalStorage();
+      });
+
+      checkbox.addEventListener('change', saveTasksToLocalStorage);
+
+      task.appendChild(checkbox);
+      task.appendChild(label);
+      task.appendChild(deleteBtn);
+
+      const due = document.createElement('div');
+      due.className = 'due';
+      due.setAttribute('data-date', date);
+      due.textContent = `期限: ${date}`;
+
+      taskWrapper.appendChild(task);
+      taskWrapper.appendChild(due);
+      group.appendChild(taskWrapper);
+
+      saveTasksToLocalStorage();
+    }
+
+    // フォーム送信で新規課題追加
+    document.querySelector('.add-task-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const subject = document.getElementById('new-task-subject').value.trim();
+      const title = document.getElementById('new-task-title').value.trim();
+      const date = document.getElementById('new-task-date').value;
+
+      if (!subject || !title || !date) {
+        alert('すべての項目を入力してください。');
+        return;
+      }
+      createTask(subject, title, date);
+      e.target.reset();
+    });
+
+    // 初期ロードで保存済みタスク読み込み
+    loadTasksFromLocalStorage();
+  </script>
+</body>
+</html>
